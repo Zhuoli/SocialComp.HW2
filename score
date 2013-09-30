@@ -1,0 +1,65 @@
+#!/usr/bin/env python
+
+import sys, math
+
+if len(sys.argv) < 3:
+   print "Usage:", sys.argv[0], '<edge file> <# of predicted edges>'
+   sys.exit()
+
+try:
+	actual_edges = open(sys.argv[1])
+except:
+	print "Error Unable to open edge file."
+	sys.exit()
+
+try:
+	num_edges = int(sys.argv[2])
+except:
+	print "Error: Unable to parse # of edges from command line"
+	sys.exit()
+
+edges = set()
+for line in actual_edges:
+    n1, n2 = line.split()
+    
+    if n2 < n1:
+       temp = n2
+       n2 = n1
+       n1 = temp
+
+    edges.add((n1, n2))
+
+    if len(edges) == num_edges * 10: break
+
+actual_edges.close()
+
+if len(edges) < num_edges:
+   print "Error: Only %i edges in edge file, too few to score input" % (len(edges))
+   sys.exit()
+
+i = 1
+num = 0.0
+den = 0.0
+
+for line in sys.stdin:
+    try:
+       n1, n2 = line.split()
+    except:
+       print "Error: Bad line in input from stdin"
+       sys.exit()
+
+    if n2 < n1:
+       temp = n2
+       n2 = n1
+       n1 = temp
+    
+    if (n1, n2) in edges: num += 1.0/(math.log(i)+1)
+    den += 1.0/(math.log(i)+1)
+    i += 1
+
+    if i == num_edges: break
+
+if i < num_edges:
+   print "Warning: Less than", num_edges, "read from stdin"
+
+print "Score:", num/den

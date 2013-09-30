@@ -1,0 +1,32 @@
+#!/usr/bin/env python
+
+import sys, os
+
+user = '5750linkpred'
+score = 'score'
+
+edges_to_predict = 200
+
+graphdir = '/course/cs5750f13/data/homework2/'
+graphs = ['model1-1.txt', 'model1-2.txt', 'model1-3.txt', 'model1-4.txt',
+          'model2-1.txt', 'model2-2.txt', 'model2-3.txt', 'model2-4.txt',
+          'model3-1.txt', 'model3-2.txt', 'model3-3.txt', 'model3-4.txt',
+          'model4-1.txt', 'model4-2.txt', 'model4-3.txt', 'model4-4.txt',
+          'sample1-1.txt']
+
+edgedir = '/course/cs5750f13/data/homework2/'
+edges = ['model1-1_growth.txt', 'model1-2_growth.txt', 'model1-3_growth.txt', 'model1-4_growth.txt',
+          'model2-1_growth.txt', 'model2-2_growth.txt', 'model2-3_growth.txt', 'model2-4_growth.txt',
+          'model3-1_growth.txt', 'model3-2_growth.txt', 'model3-3_growth.txt', 'model3-4_growth.txt',
+          'model4-1_growth.txt', 'model4-2_growth.txt', 'model4-3_growth.txt', 'model4-4_growth.txt',
+          'sample1-1_growth.txt']
+
+for graph, edge in zip(graphs, edges):
+    print 'Predicting and scoring %i edges for graph %s' % (edges_to_predict, graph)
+    os.system('./%s %s %i | ./%s %s %i' % (
+            user,
+            graphdir + graph,
+            edges_to_predict,
+            score,
+            edgedir + edge,
+            edges_to_predict))
