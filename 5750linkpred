@@ -1,34 +1,22 @@
-#!/usr/bin/env python
+#!/usr/bin/python
+import basNetPredict as net
+import sys
+# get edgelist
+edgelist,nodes = net.file2edgelist(sys.argv) 
+# get graph
+G = net.edgelist2graph(edgelist)
+# get scc and wcc
+scc,wcc = net.getSubGraph(G)
+# number
+number = int(sys.argv[2])
+#return expected to link links 
 
-import sys, random
+linksInSCC = net.getPredictionInSCC(scc,number)
 
-if len(sys.argv) < 3:
-    print 'Usage:', sys.argv[0], '<graph file> <# of edges to predict>'
-    sys.exit()
-
-try:
-    graphfile = open(sys.argv[1])
-except:
-    print 'Error: Unable to open graph file.'
-    sys.exit()
-
-try:
-    num_edges = int(sys.argv[2])
-except:
-    print 'Error: Unable to parse # of edges from command line'
-    sys.exit()
-
-nodes = set()
-for line in graphfile:
-    try:
-        n1, n2 = line.split()
-    except:
-        print 'Error: Malformed graph file.'
-        sys.exit()
-
-    nodes.add(n1)
-    nodes.add(n2)
-
-for i in range(num_edges):
-    n1, n2 = random.sample(nodes, 2)
-    print '%s\t%s' % (n1, n2)
+length = len(linksInSCC)
+if length > 0:
+  net.prints(linksInSCC)
+if length < number:
+  number = number - length
+  linksInWCC = net.getPredictionInWCC(wcc,number)
+  net.prints(linksInWCC)
