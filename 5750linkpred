@@ -9,14 +9,24 @@ G = net.edgelist2graph(edgelist)
 scc,wcc = net.getSubGraph(G)
 # number
 number = int(sys.argv[2])
-#return expected to link links 
+#return expected to link links  with Triadic Closure  method
 
 linksInSCC = net.getPredictionInSCC(scc,number)
 
 length = len(linksInSCC)
 if length > 0:
+  print "Links in SCC"
+  print 'Expected number is: ' + str(number), 'size of links in SCC is:  ' + str(length)
   net.prints(linksInSCC)
+else:
+  print "Didn't get prediction links in SCC"
 if length < number:
   number = number - length
   linksInWCC = net.getPredictionInWCC(wcc,number)
-  net.prints(linksInWCC)
+  linksInWCC = net.getOutDuplicateFrom(linksInWCC,linksInSCC)
+  if len(linksInWCC) > 0:
+    print "Links In WCC"
+    net.prints(linksInWCC)
+  else:
+    print "Didn't get prediction links in WCC"
+
