@@ -1,17 +1,22 @@
 #!/usr/bin/python
 import basNetPredict as net
+import reference as ref
 import sys
+import networkx as nx
 # get edgelist
 edgelist,nodes = net.file2edgelist(sys.argv) 
-# get graph
-G = net.edgelist2graph(edgelist)
-# get scc and wcc
-buffer = net.getSubGraphNerighbourOverlap(G)
-
 # number
 number = int(sys.argv[2])
-
-bestmatches = net.getNBestMatch(buffer, number)
-
-net.prints(bestmatches)
+# get graph
+G = net.edgelist2graph(edgelist)
+# get the prediction using neighbor overlap
+nonDiG = nx.Graph()
+nonDiG.add_edges_from(G.edges())
+# get the comminites
+communites = ref.best_partition(nonDiG)
+# get the prediction buffer
+buffer = net.makePredictionAtNOP(comminites)
+# get best n maches
+bestmatches = net.getBestMaches(buffer, number)
 # print prediction
+net.prints(bestmatches)

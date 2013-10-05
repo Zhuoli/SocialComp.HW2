@@ -81,3 +81,19 @@ def prints(edgelist):
   for edge in edgelist:
     print edge[0] +'\t' + edge[-1]
 
+
+def makePredictionAtNOP(comminites):
+  buffers = []
+  for comminity in communites:
+    BUFFER = predictWithNeighborsOverLap(comminity)
+    buffers.extend(BUFFER)
+  return buffers
+
+def predictWithNeighborsOverLap(community):
+  BUFFER = []
+
+  return BUFFER
+
+def getBestMaches(BUFFER,number):
+
+  return BUFFER
