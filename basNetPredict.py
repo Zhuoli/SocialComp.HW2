@@ -1,6 +1,6 @@
 import sys, random
 import networkx as nx
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 def file2edgelist(argv):
   if len(argv) < 3:
       print 'Usage:', argv[0], '<graph file> <# of edges to predict>'
