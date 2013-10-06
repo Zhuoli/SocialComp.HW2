@@ -13,10 +13,14 @@ G = net.edgelist2graph(edgelist)
 nonDiG = nx.Graph()
 nonDiG.add_edges_from(G.edges())
 # get the comminites
-communites = ref.best_partition(nonDiG)
+#communites = ref.best_partition(nonDiG)
+# find k-clique communities in graph using the percolation method
+communities = list(nx.k_clique_communities(nonDiG,3))
+print 'nodes size : ' + str(len(nodes))
+print 'communities size: ' + str(len(communities))
 # get the prediction buffer
-buffer = net.makePredictionAtNOP(comminites)
+BUFFER = net.makePredictionAtNOP(comminites)
 # get best n maches
-bestmatches = net.getBestMaches(buffer, number)
+#bestmatches = net.getBestMaches(BUFFER, number)
 # print prediction
-net.prints(bestmatches)
+#net.prints(bestmatches)

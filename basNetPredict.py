@@ -81,19 +81,37 @@ def prints(edgelist):
   for edge in edgelist:
     print edge[0] +'\t' + edge[-1]
 
-
+# Author: Zhuoli
+# makePrediction at neighbors overlap method with list of communites
 def makePredictionAtNOP(comminites):
   buffers = []
   for comminity in communites:
     BUFFER = predictWithNeighborsOverLap(comminity)
     buffers.extend(BUFFER)
   return buffers
-
+# Author: Zhuoli
+# make prediction with neighbors overlap method in a community
 def predictWithNeighborsOverLap(community):
   BUFFER = []
-
+  visited = []
+  for node in community.nodes():
+    visited.append(node)
+    neighbors = community.neighbors(node)
+    for neighbor in neighbors:
+      if not neighbor in visited:
+        edge = [node,neighbor]
+        numerator = (len(set(community.neighbors(neighbor)) & set(neighbors)) + 0.0)
+        denominator = (len(set(community.neighbors(neighbor)) | set(neighbors)) + 0.1)
+        rate = numerator / denominator
+        if rate > 0:
+          BUFFER.append([edge,rate])
   return BUFFER
 
+# Author: xiaofeng
+# get best machies
+# Given a list of prediction and expected number
+# A prediction is [ [pair], probability]
+# Return a list of prediction
 def getBestMaches(BUFFER,number):
 
   return BUFFER
