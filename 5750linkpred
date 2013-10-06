@@ -1,7 +1,7 @@
 #!/usr/bin/python
-import basNetPredict as net
-import reference as ref
 import sys
+sys.path.append('./networkx')
+import basNetPredict as net
 import networkx as nx
 # get edgelist
 edgelist,nodes = net.file2edgelist(sys.argv) 
@@ -15,11 +15,14 @@ nonDiG.add_edges_from(G.edges())
 # get the comminites
 #communites = ref.best_partition(nonDiG)
 # find k-clique communities in graph using the percolation method
-communities = list(nx.k_clique_communities(nonDiG,3))
+# returns a list of communities which is represented as a frozenset nodes
+setOfNodes = list(nx.k_clique_communities(nonDiG,3))
+# convert set o nodes to list of communities
+communities = net.getCommunities(nonDiG,setOfNodes)
 print 'nodes size : ' + str(len(nodes))
 print 'communities size: ' + str(len(communities))
 # get the prediction buffer
-BUFFER = net.makePredictionAtNOP(comminites)
+BUFFER = net.makePredictionAtNOP(communities)
 # get best n maches
 #bestmatches = net.getBestMaches(BUFFER, number)
 # print prediction

@@ -83,9 +83,9 @@ def prints(edgelist):
 
 # Author: Zhuoli
 # makePrediction at neighbors overlap method with list of communites
-def makePredictionAtNOP(comminites):
+def makePredictionAtNOP(communities):
   buffers = []
-  for comminity in communites:
+  for comminity in communities:
     BUFFER = predictWithNeighborsOverLap(comminity)
     buffers.extend(BUFFER)
   return buffers
@@ -115,3 +115,11 @@ def predictWithNeighborsOverLap(community):
 def getBestMaches(BUFFER,number):
 
   return BUFFER
+
+# convert set of nodes to list of communities
+def getCommunities(graph,setOfNodes):
+  communities = []
+  for nodes in setOfNodes:
+    subgraph = graph.subgraph(list(nodes))
+    communities.append(subgraph)
+  return communities
