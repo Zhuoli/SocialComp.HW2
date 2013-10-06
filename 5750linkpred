@@ -21,8 +21,9 @@ setOfNodes = list(nx.k_clique_communities(nonDiG,3))
 communities = net.getCommunities(nonDiG,setOfNodes)
 print 'nodes size : ' + str(len(nodes))
 print 'communities size: ' + str(len(communities))
-# get the prediction buffer
-BUFFER = net.makePredictionAtNOP(communities)
+# get the prediction buffer using Jaccard's coefficient method
+buffersOfCE = net.predictorAtCoefficient(communities)
+print 'prediction result size is: ' + str(len(buffersOfCE))
 # get best n maches
 #bestmatches = net.getBestMaches(BUFFER, number)
 # print prediction

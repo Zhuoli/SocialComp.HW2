@@ -82,16 +82,57 @@ def prints(edgelist):
     print edge[0] +'\t' + edge[-1]
 
 # Author: Zhuoli
-# makePrediction at neighbors overlap method with list of communites
-def makePredictionAtNOP(communities):
-  buffers = []
+# make Prediction  using Jaccard's coefficient method
+def predictorAtCoefficient(communities):
+  bufferHash = {}
   for comminity in communities:
-    BUFFER = predictWithNeighborsOverLap(comminity)
-    buffers.extend(BUFFER)
-  return buffers
+    predictWithNeighborsOverLapRate(comminity,bufferHash)
+  return bufferHash.items()
 # Author: Zhuoli
-# make prediction with neighbors overlap method in a community
-def predictWithNeighborsOverLap(community):
+# make prediction with neighbors overlap
+# rate method in a undirected community
+def predictWithNeighborsOverLapRate(community,bufferHash):
+  visited = []
+  for node in community.nodes():
+    nodeNeighbors = community.neighbors(node)
+    for nodeNeighbor in nodeNeighbors:
+      subneighbors = community.neighbors(nodeNeighbor)
+      subneighbors.remove(node)
+      for subneighbor in subneighbors:
+        if tuple([subneighbor,node]) in community.edges():
+          continue
+        numerator = (len(set(community.neighbors(subneighbor)) & set(nodeNeighbors)) + 0.0)
+        denominator = (len(set(community.neighbors(subneighbor)) | set(nodeNeighbors)) + 0.1)
+        rate = numerator / denominator
+        edge = tuple([subneighbor,node])
+        if edge in bufferHash:
+          value = bufferHash[edge]
+          if rate > value:
+            bufferHash[edge]=value
+            bufferHash[tuple(edge[-1],edge[0])] = value
+        else:
+          bufferHash[edge] = rate
+          bufferHash[tuple([edge[-1],edge[0]])] = rate
+  return 
+# make prediction using common neighbors method
+def predictorAtCommonNeighbors(communities):
+  BUFFER = []
+  visited = []
+  for node in community.nodes():
+    nodeNeighbors = community.neighbors(node)
+    for nodeNeighbor in nodeNeighbors:
+      subneighbors = community.neighbors(neighbor)
+      subneighbors.remove(node)
+      for subneighbor in subneighbors:
+        if [subneighbor,node] in community.edgelist():
+          continue
+        edge = [subneighbor,node]
+        comons = (len(set(community.neighbors(subneighbor)) & set(nodeNeighbors)) + 0.0)
+        BUFFER.append([edge,commons])
+  return BUFFER
+
+# make prediction using common neighbors method in one community
+def predictAtCommonNeighbors(community):
   BUFFER = []
   visited = []
   for node in community.nodes():
@@ -100,12 +141,10 @@ def predictWithNeighborsOverLap(community):
     for neighbor in neighbors:
       if not neighbor in visited:
         edge = [node,neighbor]
-        numerator = (len(set(community.neighbors(neighbor)) & set(neighbors)) + 0.0)
-        denominator = (len(set(community.neighbors(neighbor)) | set(neighbors)) + 0.1)
-        rate = numerator / denominator
-        if rate > 0:
-          BUFFER.append([edge,rate])
-  return BUFFER
+        commons = (len(set(community.neighbors(neighbor)) & set(neighbors)) + 0.0)
+        if commons > 0:
+          BUFFER.append([edge,commons])
+  return
 
 # Author: xiaofeng
 # get best machies
