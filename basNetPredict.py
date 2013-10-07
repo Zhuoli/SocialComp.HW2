@@ -87,7 +87,8 @@ def predictorAtCoefficient(communities):
   bufferHash = {}
   for comminity in communities:
     predictWithNeighborsOverLapRate(comminity,bufferHash)
-  return bufferHash.items()
+  items = bufferHash.items()
+  return items
 # Author: Zhuoli
 # make prediction with neighbors overlap
 # rate method in a undirected community
@@ -99,7 +100,10 @@ def predictWithNeighborsOverLapRate(community,bufferHash):
       subneighbors = community.neighbors(nodeNeighbor)
       subneighbors.remove(node)
       for subneighbor in subneighbors:
+        # omit connected links
         if tuple([subneighbor,node]) in community.edges():
+          continue
+        if tuple([node,subneighbor]) in community.edges():
           continue
         numerator = (len(set(community.neighbors(subneighbor)) & set(nodeNeighbors)) + 0.0)
         denominator = (len(set(community.neighbors(subneighbor)) | set(nodeNeighbors)) + 0.1)
@@ -108,42 +112,45 @@ def predictWithNeighborsOverLapRate(community,bufferHash):
         if edge in bufferHash:
           value = bufferHash[edge]
           if rate > value:
-            bufferHash[edge]=value
-            bufferHash[tuple(edge[-1],edge[0])] = value
+            bufferHash[edge]=rate
+            bufferHash[tuple(edge[-1],edge[0])] = rate
         else:
           bufferHash[edge] = rate
           bufferHash[tuple([edge[-1],edge[0]])] = rate
   return 
+# Author: Zhuoli
 # make prediction using common neighbors method
 def predictorAtCommonNeighbors(communities):
-  BUFFER = []
+  bufferHash = {}
+  for comminity in communities:
+    predictAtCommonNeighbors(comminity,bufferHash)
+  items = bufferHash.items()
+  return items
+
+# make prediction using common neighbors method in one community
+def predictAtCommonNeighbors(community,bufferHash):
   visited = []
   for node in community.nodes():
     nodeNeighbors = community.neighbors(node)
     for nodeNeighbor in nodeNeighbors:
-      subneighbors = community.neighbors(neighbor)
+      subneighbors = community.neighbors(nodeNeighbor)
       subneighbors.remove(node)
       for subneighbor in subneighbors:
-        if [subneighbor,node] in community.edgelist():
+        # omit connected links
+        if tuple([subneighbor,node]) in community.edges():
           continue
-        edge = [subneighbor,node]
-        comons = (len(set(community.neighbors(subneighbor)) & set(nodeNeighbors)) + 0.0)
-        BUFFER.append([edge,commons])
-  return BUFFER
-
-# make prediction using common neighbors method in one community
-def predictAtCommonNeighbors(community):
-  BUFFER = []
-  visited = []
-  for node in community.nodes():
-    visited.append(node)
-    neighbors = community.neighbors(node)
-    for neighbor in neighbors:
-      if not neighbor in visited:
-        edge = [node,neighbor]
-        commons = (len(set(community.neighbors(neighbor)) & set(neighbors)) + 0.0)
-        if commons > 0:
-          BUFFER.append([edge,commons])
+        if tuple([node,subneighbor]) in community.edges():
+          continue
+        commons = (len(set(community.neighbors(subneighbor)) & set(nodeNeighbors)) + 0.0)
+        edge = tuple([subneighbor,node])
+        if edge in bufferHash:
+          value = bufferHash[edge]
+          if commons > value:
+            bufferHash[edge]= commons
+            bufferHash[tuple(edge[-1],edge[0])] = commons
+        else:
+          bufferHash[edge] = commons
+          bufferHash[tuple([edge[-1],edge[0]])] = commons
   return
 
 # Author: xiaofeng
