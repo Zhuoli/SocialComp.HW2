@@ -85,35 +85,60 @@ def prints(edgelist):
 # make Prediction  using Jaccard's coefficient method
 def predictorAtCoefficient(communities):
   bufferHash = {}
-  for comminity in communities:
-    predictWithNeighborsOverLapRate(comminity,bufferHash)
+  for community in communities:
+    neighborHash = getNeighborHash(community)
+    predictWithNeighborsOverLapRate(community,bufferHash,neighborHash)
   items = bufferHash.items()
   return items
 # Author: Zhuoli
+# fullfill the neighbor hash table
+def getNeighborHash(community):
+  nhash = {}
+  nodes = community.nodes()
+  for node in nodes:
+    neighbors = community.neighbors(node)
+    nhash[node]=neighbors
+  return nhash
+# get hashtable for community edges
+def getEdgeHash(community):
+  edgeHash = {}
+  edges = community.edges()
+  for edge in edges:
+    edgeHash[tuple(edge)] = 1
+  return edgeHash
+# Author: Zhuoli
 # make prediction with neighbors overlap
 # rate method in a undirected community
-def predictWithNeighborsOverLapRate(community,bufferHash):
+def predictWithNeighborsOverLapRate(community,bufferHash,neighborHash):
+#  print 'in predict with neighbor over lap rate'
+#  print 'community nodes size: ' + str(len(community.nodes()))
+#  print 'community edges size: ' + str(len(community.edges()))
+#  print 'neighbor hash size: ' + str(len(neighborHash.keys()))
   visited = []
+  edgeHash = getEdgeHash(community)
   for node in community.nodes():
-    nodeNeighbors = community.neighbors(node)
+  #  print 'first loop level size: ' + str(len(community.nodes()))
+    nodeNeighbors = neighborHash[node]
     for nodeNeighbor in nodeNeighbors:
-      subneighbors = community.neighbors(nodeNeighbor)
+    #  print 'second loop level size: ' + str(len(nodeNeighbors))
+      subneighbors = neighborHash[nodeNeighbor]
       subneighbors.remove(node)
       for subneighbor in subneighbors:
+#        print 'third loop level node size: ' + str(len(subneighbors))
         # omit connected links
-        if tuple([subneighbor,node]) in community.edges():
+        if edgeHash.has_key(tuple([subneighbor,node])):
           continue
-        if tuple([node,subneighbor]) in community.edges():
+        if edgeHash.has_key(tuple([node,subneighbor])):
           continue
-        numerator = (len(set(community.neighbors(subneighbor)) & set(nodeNeighbors)) + 0.0)
-        denominator = (len(set(community.neighbors(subneighbor)) | set(nodeNeighbors)) + 0.1)
+        numerator = (len(set(neighborHash[subneighbor]) & set(nodeNeighbors)) + 0.0)
+        denominator = (len(set(neighborHash[subneighbor]) | set(nodeNeighbors)) + 0.1)
         rate = numerator / denominator
         edge = tuple([subneighbor,node])
         if edge in bufferHash:
           value = bufferHash[edge]
           if rate > value:
             bufferHash[edge]=rate
-            bufferHash[tuple(edge[-1],edge[0])] = rate
+            bufferHash[tuple([edge[-1],edge[0]])] = rate
         else:
           bufferHash[edge] = rate
           bufferHash[tuple([edge[-1],edge[0]])] = rate
@@ -122,32 +147,34 @@ def predictWithNeighborsOverLapRate(community,bufferHash):
 # make prediction using common neighbors method
 def predictorAtCommonNeighbors(communities):
   bufferHash = {}
-  for comminity in communities:
-    predictAtCommonNeighbors(comminity,bufferHash)
+  for community in communities:
+    neighborHash = getNeighborHash(community)
+    predictAtCommonNeighbors(community,bufferHash,neighborHash)
   items = bufferHash.items()
   return items
 
 # make prediction using common neighbors method in one community
-def predictAtCommonNeighbors(community,bufferHash):
+def predictAtCommonNeighbors(community,bufferHash,neighborHash):
   visited = []
+  edgeHash = getEdgeHash(community)
   for node in community.nodes():
-    nodeNeighbors = community.neighbors(node)
+    nodeNeighbors = neighborHash[node]
     for nodeNeighbor in nodeNeighbors:
-      subneighbors = community.neighbors(nodeNeighbor)
+      subneighbors = neighborHash[nodeNeighbor]
       subneighbors.remove(node)
       for subneighbor in subneighbors:
         # omit connected links
-        if tuple([subneighbor,node]) in community.edges():
+        if edgeHash.has_key(tuple([subneighbor,node])):
           continue
-        if tuple([node,subneighbor]) in community.edges():
+        if edgeHash.has_key(tuple([node,subneighbor])):
           continue
-        commons = (len(set(community.neighbors(subneighbor)) & set(nodeNeighbors)) + 0.0)
+        commons = (len(set(neighborHash[subneighbor]) & set(nodeNeighbors)) + 0.0)
         edge = tuple([subneighbor,node])
         if edge in bufferHash:
           value = bufferHash[edge]
           if commons > value:
             bufferHash[edge]= commons
-            bufferHash[tuple(edge[-1],edge[0])] = commons
+            bufferHash[tuple([edge[-1],edge[0]])] = commons
         else:
           bufferHash[edge] = commons
           bufferHash[tuple([edge[-1],edge[0]])] = commons
