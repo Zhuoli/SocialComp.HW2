@@ -1,4 +1,5 @@
-import sys, random
+import sys, rand
+om
 import networkx as nx
 #import matplotlib.pyplot as plt
 def file2edgelist(argv):
@@ -181,13 +182,18 @@ def predictAtCommonNeighbors(community,bufferHash,neighborHash):
   return
 
 # Author: xiaofeng
-# get best machies
+# get best maches:
 # Given a list of prediction and expected number
 # A prediction is [ [pair], probability]
 # Return a list of prediction
-def getBestMaches(BUFFER,number):
+def getBestMaches(buffer1,buffer2,number):
+    Likelihood1= like(buffer1[edge],original)
+    likelihood2= like(buffer2[edge],original)
+    (k1,k2) = iterate_max(likelihood)
 
-  return BUFFER
+    buffer = k1* buffer1 + k2 *buffer2
+
+  return buffer
 
 # convert set of nodes to list of communities
 def getCommunities(graph,setOfNodes):

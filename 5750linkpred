@@ -29,5 +29,8 @@ buffersOfCN = net.predictorAtCommonNeighbors(communities)
 print 'prediction size at common neighbors method is:\n ' + str(len(buffersOfCE))
 # get best n maches
 #bestmatches = net.getBestMaches(BUFFER, number)
+bestmaches_CE_CN = net.getBestMaches(buffersOfCE,buffersOfCN,number)
+
+
 # print prediction
 #net.prints(bestmatches)
