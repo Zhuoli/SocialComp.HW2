@@ -192,8 +192,8 @@ def predictAtCommonNeighbors(community,bufferHash,neighborHash):
 
 def getBestMaches(buffer1,number, buffer2=None):
     sorted_buffer = sorted(buffer1,key=buffer1.probability)
-    for i in range(1,number+1)
-    buffer2[i] = sorted_buffer[i]
+    for i in range(1,number+1):
+      buffer2[i] = sorted_buffer[i]
     return buffer2
 
 
