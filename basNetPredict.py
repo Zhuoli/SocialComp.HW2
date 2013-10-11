@@ -110,6 +110,8 @@ def getEdgeHash(community):
 # Author: Zhuoli
 # make prediction with neighbors overlap
 # rate method in a undirected community
+
+#Xiaofeng: "These functions have no return value on probability, only changing bufferHash...So I modified the 5750 usage of these functions
 def predictWithNeighborsOverLapRate(community,bufferHash,neighborHash):
 #  print 'in predict with neighbor over lap rate'
 #  print 'community nodes size: ' + str(len(community.nodes()))
@@ -152,6 +154,7 @@ def predictorAtCommonNeighbors(communities):
     neighborHash = getNeighborHash(community)
     predictAtCommonNeighbors(community,bufferHash,neighborHash)
   items = bufferHash.items()
+
   return items
 
 # make prediction using common neighbors method in one community
@@ -186,19 +189,19 @@ def predictAtCommonNeighbors(community,bufferHash,neighborHash):
 # Given a list of prediction and expected number
 # A prediction is [ [pair], probability]
 # Return a list of prediction
-def getBestMaches(buffer1,buffer2,number):
-    Likelihood1= like(buffer1[edge],original)
-    likelihood2= like(buffer2[edge],original)
-    (k1,k2) = iterate_max(likelihood)
 
-    buffer = k1* buffer1 + k2 *buffer2
+def getBestMaches(buffer1,number, buffer2=None):
+    sorted_buffer = sorted(buffer1,key=buffer1.probability)
+    for i in range(1,number+1)
+    buffer2[i] = sorted_buffer[i]
+    return buffer2
 
-  return buffer
+
 
 # convert set of nodes to list of communities
-def getCommunities(graph,setOfNodes):
+def get_communities(graph, set_of_nodes):
   communities = []
-  for nodes in setOfNodes:
+  for nodes in set_of_nodes:
     subgraph = graph.subgraph(list(nodes))
     communities.append(subgraph)
   return communities

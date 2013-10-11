@@ -27,9 +27,16 @@ print 'prediction size at Nieghbors Coefficient method is:\n ' + str(len(buffers
 # get the prediction buffer using common neibhbors method
 buffersOfCN = net.predictorAtCommonNeighbors(communities)
 print 'prediction size at common neighbors method is:\n ' + str(len(buffersOfCE))
+
+#decide the probability using overlapping rate
+buffersOfCN.probability = net.predictWithNeighborsOverLapRate(communities,buffersOfCN,net.getNeighborHash(communities))
+print 'probabiliy of CN prediction is:\n' + buffersOfCN.probability
+
 # get best n maches
 #bestmatches = net.getBestMaches(BUFFER, number)
-bestmaches_CE_CN = net.getBestMaches(buffersOfCE,buffersOfCN,number)
+bestmaches_CE= net.getBestMaches(buffersOfCE,number)
+bestmaches_CN= net.getBestMaches(buffersOfCN,number)
+
 
 
 # print prediction
