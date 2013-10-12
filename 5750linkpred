@@ -41,3 +41,14 @@ bestmaches_CN= net.getBestMaches(buffersOfCN,number)
 
 # print prediction
 #net.prints(bestmatches)
+
+sys.stdout.write(bestmaches_CE)
+sys.stdout.write(bestmaches_CN)
+
+#test to see if prediction is right
+f = open("out.txt", "w")
+range(1, number)
+print bestmaches_CE
+print bestmaches_CN
+
+f.close()

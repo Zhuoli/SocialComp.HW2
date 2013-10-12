@@ -192,7 +192,8 @@ def predictAtCommonNeighbors(community,bufferHash,neighborHash):
 def getBestMaches(buffer_in,number, buffer_out=None):
     sorted_buffer = sorted(buffer_in, key=buffer_in.probability)
     for i in range(1,number):
-        buffer_out[i] = buffer_in[:,i]
+        buffer_out[i] = buffer_in[:,i].pair
+        #convert list back to graph links
     return buffer_out
 
 
