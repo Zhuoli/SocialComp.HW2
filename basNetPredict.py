@@ -1,5 +1,4 @@
-import sys, rand
-om
+import sys, random
 import networkx as nx
 #import matplotlib.pyplot as plt
 def file2edgelist(argv):
@@ -190,11 +189,11 @@ def predictAtCommonNeighbors(community,bufferHash,neighborHash):
 # A prediction is [ [pair], probability]
 # Return a list of prediction
 
-def getBestMaches(buffer1,number, buffer2=None):
-    sorted_buffer = sorted(buffer1,key=buffer1.probability)
-    for i in range(1,number+1)
-    buffer2[i] = sorted_buffer[i]
-    return buffer2
+def getBestMaches(buffer_in,number, buffer_out=None):
+    sorted_buffer = sorted(buffer_in, key=buffer_in.probability)
+    for i in range(1,number):
+        buffer_out[i] = buffer_in[:,i]
+    return buffer_out
 
 
 
