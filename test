@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-import sys, os
+import sys, os, pwd, subprocess
 
-user = '5750linkpred'
-score = 'score'
+user_prog = './5750linkpred'
+score_prog = './score'
 
 edges_to_predict = 200
 
@@ -21,12 +21,34 @@ edges = ['model1-1_growth.txt', 'model1-2_growth.txt', 'model1-3_growth.txt', 'm
           'model4-1_growth.txt', 'model4-2_growth.txt', 'model4-3_growth.txt', 'model4-4_growth.txt',
           'sample1-1_growth.txt']
 
+username = pwd.getpwuid(os.getuid())[0]
+
+out = open('/course/cs5750f13/stats/homework2/' + username, 'w')
+
 for graph, edge in zip(graphs, edges):
     print 'Predicting and scoring %i edges for graph %s' % (edges_to_predict, graph)
-    os.system('./%s %s %i | ./%s %s %i' % (
-            user,
-            graphdir + graph,
-            edges_to_predict,
-            score,
-            edgedir + edge,
-            edges_to_predict))
+
+    edges = subprocess.Popen([user_prog, graphdir + graph, str(edges_to_predict)],
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT).communicate()[0]
+
+    score = subprocess.Popen([score_prog, edgedir + edge, str(edges_to_predict)],
+                             stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT).communicate(input=edges)[0]
+
+    print score,
+
+    score = float(score.split()[1])
+
+    #os.system('./%s %s %i | ./%s %s %i' % (
+    #        user,
+    #        graphdir + graph,
+    #        edges_to_predict,
+    #        score,
+    #        edgedir + edge,
+    #        edges_to_predict))
+
+    out.write("%s\t%s\t%f\n" % (graph, username, score))
+
+out.close()

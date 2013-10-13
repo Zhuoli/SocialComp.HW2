@@ -13,24 +13,24 @@ G = net.edgelist2graph(edgelist)
 nonDiG = nx.Graph()
 nonDiG.add_edges_from(G.edges())
 # get the comminites
-#communites = ref.best_partition(nonDiG)
 # find k-clique communities in graph using the percolation method
 # returns a list of communities which is represented as a frozenset nodes
 setOfNodes = list(nx.k_clique_communities(nonDiG,3))
+if len(setOfNodes) > 6000:
+  setOfNodes = list(nx.k_clique_communities(nonDiG,4))
 # convert set o nodes to list of communities
 communities = net.getCommunities(nonDiG,setOfNodes)
-print 'nodes size : ' + str(len(nodes))
-print 'communities size: ' + str(len(communities))
+#print 'nodes size : ' + str(len(nodes))
+#print 'communities size: ' + str(len(communities))
 # get the prediction buffer using Jaccard's coefficient method
-buffersOfCE = net.predictorAtCoefficient(communities)
-print 'prediction size at Nieghbors Coefficient method is:\n ' + str(len(buffersOfCE))
+#buffersOfCE = net.predictorAtCoefficient(communities)
+#print 'prediction size at Nieghbors Coefficient method is:\n ' + str(len(buffersOfCE))
 # get the prediction buffer using common neibhbors method
 buffersOfCN = net.predictorAtCommonNeighbors(communities)
-print 'prediction size at common neighbors method is:\n ' + str(len(buffersOfCE))
+#print 'prediction size at common neighbors method is:\n ' + str(len(buffersOfCN))
 
-print 'buffersOfCN:'
-print buffersOfCN
 # get best n maches
-#bestmatches = net.getBestMaches(BUFFER, number)
+bestmatches,number = net.getBestMaches(buffersOfCN, number)
 # print prediction
-#net.prints(bestmatches)
+net.prints(bestmatches)
+#net.debugPrints(bestmatches)

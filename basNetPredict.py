@@ -1,5 +1,6 @@
 import sys, random
 import networkx as nx
+from collections import namedtuple
 #import matplotlib.pyplot as plt
 def file2edgelist(argv):
   if len(argv) < 3:
@@ -77,9 +78,16 @@ def draw(graph):
   plt.show()
 
 # prints 
-def prints(edgelist):
-  for edge in edgelist:
-    print edge[0] +'\t' + edge[-1]
+def prints(pairs):
+  for pair in pairs:
+    edge = pair[0]
+    print str(edge[0]) + '\t' + str(edge[1])
+# debug prints 
+def debugPrints(pairs):
+  for pair in pairs:
+    edge = pair[0]
+    priority = pair[-1]
+    print 'link: ' + edge[0] +'\t' + edge[-1] + '\t, Priority: ' + str(priority) 
 
 # Author: Zhuoli
 # make Prediction  using Jaccard's coefficient method
@@ -114,9 +122,10 @@ def predictWithNeighborsOverLapRate(community,bufferHash,neighborHash):
 #  print 'community nodes size: ' + str(len(community.nodes()))
 #  print 'community edges size: ' + str(len(community.edges()))
 #  print 'neighbor hash size: ' + str(len(neighborHash.keys()))
-  visited = []
+  visited ={} 
   edgeHash = getEdgeHash(community)
   for node in community.nodes():
+    visited[node] = True
   #  print 'first loop level size: ' + str(len(community.nodes()))
     nodeNeighbors = neighborHash[node]
     for nodeNeighbor in nodeNeighbors:
@@ -126,6 +135,8 @@ def predictWithNeighborsOverLapRate(community,bufferHash,neighborHash):
       for subneighbor in subneighbors:
 #        print 'third loop level node size: ' + str(len(subneighbors))
         # omit connected links
+        if visited.has_key(subneighbor):
+          continue
         if edgeHash.has_key(tuple([subneighbor,node])):
           continue
         if edgeHash.has_key(tuple([node,subneighbor])):
@@ -138,10 +149,8 @@ def predictWithNeighborsOverLapRate(community,bufferHash,neighborHash):
           value = bufferHash[edge]
           if rate > value:
             bufferHash[edge]=rate
-            bufferHash[tuple([edge[-1],edge[0]])] = rate
         else:
           bufferHash[edge] = rate
-          bufferHash[tuple([edge[-1],edge[0]])] = rate
   return 
 # Author: Zhuoli
 # make prediction using common neighbors method
@@ -155,15 +164,18 @@ def predictorAtCommonNeighbors(communities):
 
 # make prediction using common neighbors method in one community
 def predictAtCommonNeighbors(community,bufferHash,neighborHash):
-  visited = []
+  visited ={} 
   edgeHash = getEdgeHash(community)
   for node in community.nodes():
+    visited[node] = True
     nodeNeighbors = neighborHash[node]
     for nodeNeighbor in nodeNeighbors:
       subneighbors = neighborHash[nodeNeighbor]
       subneighbors.remove(node)
       for subneighbor in subneighbors:
         # omit connected links
+        if visited.has_key(subneighbor):
+          continue
         if edgeHash.has_key(tuple([subneighbor,node])):
           continue
         if edgeHash.has_key(tuple([node,subneighbor])):
@@ -174,20 +186,31 @@ def predictAtCommonNeighbors(community,bufferHash,neighborHash):
           value = bufferHash[edge]
           if commons > value:
             bufferHash[edge]= commons
-            bufferHash[tuple([edge[-1],edge[0]])] = commons
         else:
           bufferHash[edge] = commons
-          bufferHash[tuple([edge[-1],edge[0]])] = commons
   return
 
-# Author: xiaofeng
+# Author: Zhuoli
 # get best machies
 # Given a list of prediction and expected number
 # A prediction is [ [pair], probability]
 # Return a list of prediction
 def getBestMaches(BUFFER,number):
-
-  return BUFFER
+  bests = []
+  if len(BUFFER) ==0:
+    return bests,number
+  for number in range(number,0,-1):
+    if len(BUFFER) == 0:
+      break
+    maxprio = []
+    for pair in BUFFER:
+      if len(maxprio) == 0:
+        maxprio = pair
+      elif pair[-1] >maxprio[-1]:
+        maxprio = pair
+    BUFFER.remove(maxprio)
+    bests.append(maxprio)
+  return bests, number
 
 # convert set of nodes to list of communities
 def getCommunities(graph,setOfNodes):
