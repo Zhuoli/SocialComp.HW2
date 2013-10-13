@@ -45,7 +45,7 @@ def readfile():
 
 # edgelist 2 Graph
 def edgelist2graph(edgelist):
-  G = nx.DiGraph()
+  G = nx.Graph()
   G.add_edges_from(edgelist)
   return G
 #return ether strongly connected components
