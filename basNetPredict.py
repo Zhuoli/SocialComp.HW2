@@ -2,6 +2,7 @@ import sys, random
 import networkx as nx
 from collections import namedtuple
 from numpy import array
+import threading
 #import matplotlib.pyplot as plt
 def file2edgelist(argv):
   if len(argv) < 3:
@@ -140,11 +141,46 @@ def predictWithNeighborsOverLapRate(community,nbrsOutHash,nbrsInHash,nbrs):
   edgeHash = getEdgeHash(community)
   k = 1
   nodes = community.nodes()
+  threads = []
+  # named tuple
+  Args = namedtuple('Args',['edgeHash','nbrsOutHash','nbrsInHash','nbrs'])
+  Resours = namedtuple('Resours',['visitedHash','result'])
+  args = Args(edgeHash,nbrsOutHash,nbrsInHash,nbrs)
+  resours = Resours(visitedHash,result)
+  # thread initial
+  threadLock = threading.Lock()
+  threads = []
+  threadsNum = 10
+  semaphore = threading.Semaphore(threadsNum)
+  #
   for node in nodes:
+    semaphore.acquire()
     #print 'loop: ' + str(k) +'\t' + '%.3f%% completed' % ((k*100 + 0.0)/ 97134) 
     k = k+1
-    getPred4ThisNode(node,visitedHash,result,edgeHash,nbrsOutHash,nbrsInHash,nbrs)
+    t = myThread(node,args,resours,semaphore)
+    t.start()
+    threads.append(t)
+  # wait
+  for t in threads:
+    t.join()
+    threads.remove(t)
   return result.items()
+
+# Author: Zhuoli
+# thread class, use multi threads to speed up getPred4ThisNode 
+class myThread(threading.Thread):
+  def __init__(self,node,args,resours,semaphor):
+    threading.Thread.__init__(self)
+    self.node = node
+    self.args = args
+    self.resours = resours
+    self.semaphor = semaphor
+  def run(self):
+    args = self.args
+    resours = self.resours
+    semaphor = self.semaphor
+    getPred4ThisNode(self.node,resours.visitedHash,resours.result,args.edgeHash,args.nbrsOutHash,args.nbrsInHash,args.nbrs)
+    semaphor.release()
 
 # get prediction for this node
 def getPred4ThisNode(node,visitedHash,result,edgeHash,nbrsOutHash,nbrsInHash,nbrs):
