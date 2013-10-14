@@ -1,11 +1,12 @@
 import sys, random
 import networkx as nx
 from collections import namedtuple
+from numpy import array
 #import matplotlib.pyplot as plt
 def file2edgelist(argv):
   if len(argv) < 3:
       print 'Usage:', argv[0], '<graph file> <# of edges to predict>'
-      return
+      sys.exit()
 
   try:
       graphfile = open(argv[1])
@@ -45,7 +46,7 @@ def readfile():
 
 # edgelist 2 Graph
 def edgelist2graph(edgelist):
-  G = nx.Graph()
+  G = nx.DiGraph()
   G.add_edges_from(edgelist)
   return G
 #return ether strongly connected components
@@ -91,22 +92,35 @@ def debugPrints(pairs):
 
 # Author: Zhuoli
 # make Prediction  using Jaccard's coefficient method
-def predictorAtCoefficient(communities):
-  bufferHash = {}
-  for community in communities:
-    neighborHash = getNeighborHash(community)
-    predictWithNeighborsOverLapRate(community,bufferHash,neighborHash)
-  items = bufferHash.items()
+def predictorAtCoefficient(graph):
+  nbrsInHash,nbrsOutHash,nbrs = getNeighborHash(graph)
+  items = predictWithNeighborsOverLapRate(graph,nbrsOutHash,nbrsInHash,nbrs)
   return items
 # Author: Zhuoli
-# fullfill the neighbor hash table
-def getNeighborHash(community):
-  nhash = {}
-  nodes = community.nodes()
+# fullfill the neighbor hash sable
+def getNeighborHash(graph):
+  inHash = {}
+  outHash = {}
+  nbrs = {}
+  nodes = graph.nodes()
   for node in nodes:
-    neighbors = community.neighbors(node)
-    nhash[node]=neighbors
-  return nhash
+    outEdges = graph.out_edges(node)
+    if len(outEdges) > 0:
+      arrOut = array(outEdges)
+      outNbors = list(arrOut[:,1])
+      outHash[node] = outNbors
+    else:
+      outHash[node] = []
+   
+    inEdges  = graph.in_edges(node)
+    if len(inEdges) > 0:
+      arrIn = array(inEdges)
+      inNbors  = list(arrIn[:,1])
+      inHash[node]=inNbors
+    else:
+      inHash[node] = []
+    nbrs[node] = list(set(outNbors) | set(inNbors)) 
+  return inHash,outHash,nbrs
 # get hashtable for community edges
 def getEdgeHash(community):
   edgeHash = {}
@@ -117,41 +131,44 @@ def getEdgeHash(community):
 # Author: Zhuoli
 # make prediction with neighbors overlap
 # rate method in a undirected community
-def predictWithNeighborsOverLapRate(community,bufferHash,neighborHash):
+def predictWithNeighborsOverLapRate(community,nbrsOutHash,nbrsInHash,nbrs):
 #  print 'in predict with neighbor over lap rate'
-#  print 'community nodes size: ' + str(len(community.nodes()))
-#  print 'community edges size: ' + str(len(community.edges()))
-#  print 'neighbor hash size: ' + str(len(neighborHash.keys()))
-  visited ={} 
+  visitedHash ={}
+  result = {}
   edgeHash = getEdgeHash(community)
-  for node in community.nodes():
-    visited[node] = True
-  #  print 'first loop level size: ' + str(len(community.nodes()))
-    nodeNeighbors = neighborHash[node]
-    for nodeNeighbor in nodeNeighbors:
-    #  print 'second loop level size: ' + str(len(nodeNeighbors))
-      subneighbors = neighborHash[nodeNeighbor]
-      subneighbors.remove(node)
-      for subneighbor in subneighbors:
+  k = 1
+  nodes = community.nodes()
+  for node in nodes:
+    #print 'loop: ' + str(k) +'\t' + '%.3f%% completed' % ((k*100 + 0.0)/ 97134) 
+    k = k+1
+    getPred4ThisNode(node,visitedHash,result,edgeHash,nbrsOutHash,nbrsInHash,nbrs)
+  return result.items()
+
+# get prediction for this node
+def getPred4ThisNode(node,visitedHash,result,edgeHash,nbrsOutHash,nbrsInHash,nbrs):
+  visitedHash[node] = True
+  nodeNeighbors = nbrs[node]
+#   print 'first loop level node neighbors size: ' + str(len(nodeNeighbors))
+  for nodeNeighbor in nodeNeighbors:
+    subneighbors = nbrs[nodeNeighbor]
+#   print 'second loop level subneighbors size: ' + str(len(subneighbors))
+    for subneighbor in subneighbors:
 #        print 'third loop level node size: ' + str(len(subneighbors))
         # omit connected links
-        if visited.has_key(subneighbor):
-          continue
-        if edgeHash.has_key(tuple([subneighbor,node])):
-          continue
-        if edgeHash.has_key(tuple([node,subneighbor])):
-          continue
-        numerator = (len(set(neighborHash[subneighbor]) & set(nodeNeighbors)) + 0.0)
-        denominator = (len(set(neighborHash[subneighbor]) | set(nodeNeighbors)) + 0.1)
-        rate = numerator / denominator
-        edge = tuple([subneighbor,node])
-        if edge in bufferHash:
-          value = bufferHash[edge]
-          if rate > value:
-            bufferHash[edge]=rate
-        else:
-          bufferHash[edge] = rate
-  return 
+      if subneighbor == node:
+        continue
+      if subneighbor in visitedHash:
+        continue
+      if tuple([subneighbor,node]) in edgeHash:
+        continue
+      if tuple([node,subneighbor]) in edgeHash:
+        continue
+      numerator = (len(set(nbrs[subneighbor]) & set(nodeNeighbors)) + 0.0)
+      denominator = (len(set(nbrs[subneighbor]) | set(nodeNeighbors)) + 0.1)
+      rate = numerator / denominator
+      edge = tuple([subneighbor,node])
+      result[edge] = rate
+  return
 # Author: Zhuoli
 # make prediction using common neighbors method
 def predictorAtCommonNeighbors(communities):
@@ -196,21 +213,15 @@ def predictAtCommonNeighbors(community,bufferHash,neighborHash):
 # A prediction is [ [pair], probability]
 # Return a list of prediction
 def getBestMaches(BUFFER,number):
-  bests = []
   if len(BUFFER) ==0:
     return bests,number
-  for number in range(number,0,-1):
-    if len(BUFFER) == 0:
-      break
-    maxprio = []
-    for pair in BUFFER:
-      if len(maxprio) == 0:
-        maxprio = pair
-      elif pair[-1] >maxprio[-1]:
-        maxprio = pair
-    BUFFER.remove(maxprio)
-    bests.append(maxprio)
-  return bests, number
+  bests = sorted(BUFFER,key=lambda buf: buf[1])
+  length = len(bests)
+  if length > number:
+    return bests[length - 1:length - number -1: -1],0
+  else:
+    return bests, number - length
+
 
 # convert set of nodes to list of communities
 def getCommunities(graph,setOfNodes):
