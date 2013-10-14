@@ -110,6 +110,7 @@ def getNeighborHash(graph):
       outNbors = list(arrOut[:,1])
       outHash[node] = outNbors
     else:
+      outNbors = []
       outHash[node] = []
    
     inEdges  = graph.in_edges(node)
@@ -118,6 +119,7 @@ def getNeighborHash(graph):
       inNbors  = list(arrIn[:,1])
       inHash[node]=inNbors
     else:
+      inNbors = []
       inHash[node] = []
     nbrs[node] = list(set(outNbors) | set(inNbors)) 
   return inHash,outHash,nbrs
