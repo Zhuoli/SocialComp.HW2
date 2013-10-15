@@ -2,7 +2,7 @@ import sys, random
 import networkx as nx
 from collections import namedtuple
 from numpy import array
-import threading
+import multiprocess as process
 #import matplotlib.pyplot as plt
 def file2edgelist(argv):
   if len(argv) < 3:
@@ -95,7 +95,8 @@ def debugPrints(pairs):
 # make Prediction  using Jaccard's coefficient method
 def predictorAtCoefficient(graph):
   nbrsInHash,nbrsOutHash,nbrs = getNeighborHash(graph)
-  items = predictWithNeighborsOverLapRate(graph,nbrsOutHash,nbrsInHash,nbrs)
+  edgeHash = getEdgeHash(graph)
+  items = process.deliverTask(graph,nbrsOutHash,nbrsInHash,nbrs,edgeHash)
   return items
 # Author: Zhuoli
 # fullfill the neighbor hash sable
@@ -131,82 +132,6 @@ def getEdgeHash(community):
   for edge in edges:
     edgeHash[tuple(edge)] = 1
   return edgeHash
-# Author: Zhuoli
-# make prediction with neighbors overlap
-# rate method in a undirected community
-def predictWithNeighborsOverLapRate(community,nbrsOutHash,nbrsInHash,nbrs):
-#  print 'in predict with neighbor over lap rate'
-  visitedHash ={}
-  result = {}
-  edgeHash = getEdgeHash(community)
-  k = 1
-  nodes = community.nodes()
-  threads = []
-  # named tuple
-  Args = namedtuple('Args',['edgeHash','nbrsOutHash','nbrsInHash','nbrs'])
-  Resours = namedtuple('Resours',['visitedHash','result'])
-  args = Args(edgeHash,nbrsOutHash,nbrsInHash,nbrs)
-  resours = Resours(visitedHash,result)
-  # thread initial
-  threadLock = threading.Lock()
-  threads = []
-  threadsNum = 10
-  semaphore = threading.Semaphore(threadsNum)
-  #
-  for node in nodes:
-    semaphore.acquire()
-    #print 'loop: ' + str(k) +'\t' + '%.3f%% completed' % ((k*100 + 0.0)/ 97134) 
-    k = k+1
-    t = myThread(node,args,resours,semaphore)
-    t.start()
-    threads.append(t)
-  # wait
-  for t in threads:
-    t.join()
-    threads.remove(t)
-  return result.items()
-
-# Author: Zhuoli
-# thread class, use multi threads to speed up getPred4ThisNode 
-class myThread(threading.Thread):
-  def __init__(self,node,args,resours,semaphor):
-    threading.Thread.__init__(self)
-    self.node = node
-    self.args = args
-    self.resours = resours
-    self.semaphor = semaphor
-  def run(self):
-    args = self.args
-    resours = self.resours
-    semaphor = self.semaphor
-    getPred4ThisNode(self.node,resours.visitedHash,resours.result,args.edgeHash,args.nbrsOutHash,args.nbrsInHash,args.nbrs)
-    semaphor.release()
-
-# get prediction for this node
-def getPred4ThisNode(node,visitedHash,result,edgeHash,nbrsOutHash,nbrsInHash,nbrs):
-  visitedHash[node] = True
-  nodeNeighbors = nbrs[node]
-#   print 'first loop level node neighbors size: ' + str(len(nodeNeighbors))
-  for nodeNeighbor in nodeNeighbors:
-    subneighbors = nbrs[nodeNeighbor]
-#   print 'second loop level subneighbors size: ' + str(len(subneighbors))
-    for subneighbor in subneighbors:
-#        print 'third loop level node size: ' + str(len(subneighbors))
-        # omit connected links
-      if subneighbor == node:
-        continue
-      if subneighbor in visitedHash:
-        continue
-      if tuple([subneighbor,node]) in edgeHash:
-        continue
-      if tuple([node,subneighbor]) in edgeHash:
-        continue
-      numerator = (len(set(nbrs[subneighbor]) & set(nodeNeighbors)) + 0.0)
-      denominator = (len(set(nbrs[subneighbor]) | set(nodeNeighbors)) + 0.1)
-      rate = numerator / denominator
-      edge = tuple([subneighbor,node])
-      result[edge] = rate
-  return
 # Author: Zhuoli
 # make prediction using common neighbors method
 def predictorAtCommonNeighbors(communities):
