@@ -3,6 +3,8 @@ import sys
 sys.path.append('./networkx')
 import basNetPredict as net
 import networkx as nx
+import time
+starttime = time.time()
 # get edgelist
 edgelist,nodes = net.file2edgelist(sys.argv) 
 # number
@@ -12,7 +14,8 @@ dig = net.edgelist2graph(edgelist)
 #print 'nodes size: ' + str(len(nodes))
 #print 'edges size: ' + str(len(edgelist))
 # get the prediction buffer using Jaccard's coefficient method
-buffersOfCE = net.predictorAtCoefficient(dig)
+print 'At time ' + str(time.time() - starttime) + 'enterint predictor'
+buffersOfCE = net.predictorAtCoefficient(dig,starttime)
 # get the prediction buffer using common neibhbors method
 #buffersOfCN = net.predictorAtCommonNeighbors(communities)
 #print 'prediction size at common neighbors method is:\n ' + str(len(buffersOfCN))
@@ -22,3 +25,5 @@ bestmatches,number = net.getBestMaches(buffersOfCE, number)
 # print prediction
 net.prints(bestmatches)
 #net.debugPrints(bestmatches)
+endtime = time.time()
+print 'time used:\t' + str(endtime - starttime)

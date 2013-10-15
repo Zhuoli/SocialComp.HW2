@@ -3,6 +3,7 @@ import networkx as nx
 from collections import namedtuple
 from numpy import array
 import multiprocess as process
+import time
 #import matplotlib.pyplot as plt
 def file2edgelist(argv):
   if len(argv) < 3:
@@ -93,10 +94,13 @@ def debugPrints(pairs):
 
 # Author: Zhuoli
 # make Prediction  using Jaccard's coefficient method
-def predictorAtCoefficient(graph):
+def predictorAtCoefficient(graph,starttime):
+  print 'getNeighborHash time: ' + str(time.time() - starttime)
   nbrsInHash,nbrsOutHash,nbrs = getNeighborHash(graph)
+  print 'getEdgeHash time: ' + str(time.time() - starttime)
   edgeHash = getEdgeHash(graph)
-  items = process.deliverTask(graph,nbrsOutHash,nbrsInHash,nbrs,edgeHash)
+  print 'deliverTask time: ' + str(time.time() - starttime)
+  items = process.deliverTask(starttime,graph,nbrsOutHash,nbrsInHash,nbrs,edgeHash)
   return items
 # Author: Zhuoli
 # fullfill the neighbor hash sable
