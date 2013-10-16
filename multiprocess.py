@@ -1,81 +1,59 @@
-from multiprocessing import Process,Manager,Queue,Pipe
-from collections import namedtuple
+from multiprocessing import Queue
+import multiprocessing
 import time
-import sys
-process_num = 2
+import math
+nprocs = 2
 def deliverTask(starttime,graph,nbrsOutHash,nbrsInHash,nbrs,edgeHash):
-  def processingWithNeighborsOverLapRate(nodes,start,starttime,child_conn,args):
-    print 'we are in process ' + str(start)
-    edgeHash = args.edgeHash
-    nbrsOutHash = args.nbrsOutHash
-    nbrsInHash = args.nbrsInHash
-    nbrs = args.nbrs
-    localresult = {}
-    localvisitedHash = {}
+  def predictor(nodes,starttime,out_q,edgeHash,nbrsOutHash,nbrsInHash,nbrs):
+    outdict = {}
+    visitedHash = {}
     for node in nodes:
-      getPred4ThisNode(node,localvisitedHash,localresult,edgeHash,nbrsOutHash,nbrsInHash,nbrs)
+      getPred4ThisNode(node,visitedHash,outdict,edgeHash,nbrsOutHash,nbrsInHash,nbrs)
     print 'update start time: ' + str(time.time() - starttime)
-    child_conn.send(localresult)
-    print 'update end time ' + str(time.time() - starttime)
+    out_q.put(outdict)
+    print 'update end time: ' + str(time.time() - starttime)
     print 'child processing done!'
-    return
+    
+  out_q = Queue()
+  nodes = graph.nodes()
+  chunksize = int(math.ceil(len(nodes) / float(nprocs)))
+  procs = []
 
+  for i in range(nprocs):
+    p = multiprocessing.Process(target = predictor,args = (nodes[chunksize * i: chunksize * (i+1)],starttime,out_q,edgeHash,nbrsOutHash,nbrsInHash,nbrs))
+    procs.append(p)
+    p.start()
+
+  resultdict = {}
+  for i in range(nprocs):
+    print 'out_q get start time: ' + str(time.time() - starttime)
+    resultdict.update(out_q.get())
+    print 'out_q get done time: ' + str(time.time() - starttime)
+
+  for p in procs:
+    print 'Join'
+    p.join()
+  return resultdict.items()
 
 # get prediction for this node
-  def getPred4ThisNode(node,visitedHash,result,edgeHash,nbrsOutHash,nbrsInHash,nbrs):
-    visitedHash[node] = True
-    nodeNeighbors = nbrs[node]
-    for nodeNeighbor in nodeNeighbors:
-      subneighbors = nbrs[nodeNeighbor]
-      for subneighbor in subneighbors:
-        if subneighbor == node:
-          continue
-        if subneighbor in visitedHash:
-          continue
-        if tuple([subneighbor,node]) in edgeHash:
-          continue
-        if tuple([node,subneighbor]) in edgeHash: 
-          continue
-        numerator = (len(set(nbrs[subneighbor]) & set(nodeNeighbors)) + 0.0)
-        denominator = (len(set(nbrs[subneighbor]) | set(nodeNeighbors)) + 0.1)
-        rate = numerator / denominator
-        edge = tuple([subneighbor,node])
-        result[edge] = rate
-    return
-  connections = []
-  for num in range(0,process_num):
-    parent_conn,child_conn = Pipe()
-    connections.append([parent_conn,child_conn])
-
-  nodes = graph.nodes()
-  process = []
-  Args = namedtuple('Args',['edgeHash','nbrsOutHash','nbrsInHash','nbrs'])
-  args = Args(edgeHash,nbrsOutHash,nbrsInHash,nbrs)
-  nodes_size = len(nodes)
-  subnodes_size = nodes_size / process_num
-  start = 0
-  print 'Start to create process  time: ' + str(time.time() - starttime)
-  for connpair in connections: 
-    subnodes = nodes[start:start+subnodes_size]
-    p = Process(target = processingWithNeighborsOverLapRate,
-        args = (subnodes,start,starttime,connpair[1],args))
-    process.append(p)
-    p.start()
-    start += subnodes_size
-  print 'Start to run process  time: ' + str(time.time() - starttime)
-  result = {}
-  ps = len(process)
-  for connpair in connections:
-    parent_conn = connpair[0]
-    rev= parent_conn.recv()
-    result.update(rev)
-  #print rev
-  for t in process:
-    print 'Join'
-    t.join()
-
-  print 'Deliver Done time: ' + str(time.time() - starttime)
-  print str(ps) + ' process worked'
-  return result.items()
-
+def getPred4ThisNode(node,visitedHash,result,edgeHash,nbrsOutHash,nbrsInHash,nbrs):
+  visitedHash[node] = True
+  nodeNeighbors = nbrs[node]
+  for nodeNeighbor in nodeNeighbors:
+    subneighbors = nbrs[nodeNeighbor]
+    for subneighbor in subneighbors:
+      if subneighbor == node:
+        continue
+      if subneighbor in visitedHash:
+        continue
+      if tuple([subneighbor,node]) in edgeHash:
+        continue
+      if tuple([node,subneighbor]) in edgeHash: 
+        continue
+      numerator = (len(set(nbrs[subneighbor]) & set(nodeNeighbors)) + 0.0)
+      denominator = (len(set(nbrs[subneighbor]) | set(nodeNeighbors)) + 0.1)
+      rate = numerator / denominator
+      edge = tuple([subneighbor,node])
+      result[edge] = rate
+  return
 

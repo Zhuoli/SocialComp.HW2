@@ -2,7 +2,6 @@ import sys, random
 import networkx as nx
 from collections import namedtuple
 from numpy import array
-from multiprocess import Pipe
 import multiprocess as process
 import time
 #import matplotlib.pyplot as plt
