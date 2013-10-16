@@ -1,10 +1,10 @@
-from multiprocessing import Process,Manager
+from multiprocessing import Process,Manager,Queue,Pipe
 from collections import namedtuple
-from Queue import Queue
 import time
+import sys
 process_num = 2
 def deliverTask(starttime,graph,nbrsOutHash,nbrsInHash,nbrs,edgeHash):
-  def processingWithNeighborsOverLapRate(nodes,start,starttime,visitedHash,result,args):
+  def processingWithNeighborsOverLapRate(nodes,start,starttime,child_conn,args):
     print 'we are in process ' + str(start)
     edgeHash = args.edgeHash
     nbrsOutHash = args.nbrsOutHash
@@ -15,8 +15,10 @@ def deliverTask(starttime,graph,nbrsOutHash,nbrsInHash,nbrs,edgeHash):
     for node in nodes:
       getPred4ThisNode(node,localvisitedHash,localresult,edgeHash,nbrsOutHash,nbrsInHash,nbrs)
     print 'update start time: ' + str(time.time() - starttime)
-    result.update(localresult)
+    child_conn.send(localresult)
     print 'update end time ' + str(time.time() - starttime)
+    print 'child processing done!'
+    return
 
 
 # get prediction for this node
@@ -40,11 +42,10 @@ def deliverTask(starttime,graph,nbrsOutHash,nbrsInHash,nbrs,edgeHash):
         edge = tuple([subneighbor,node])
         result[edge] = rate
     return
-  manager = Manager()
-  visitedHash = manager.dict()
-  k = manager.Value('L',1)
-  resultdict = manager.dict()
-
+  connections = []
+  for num in range(0,process_num):
+    parent_conn,child_conn = Pipe()
+    connections.append([parent_conn,child_conn])
 
   nodes = graph.nodes()
   process = []
@@ -54,22 +55,27 @@ def deliverTask(starttime,graph,nbrsOutHash,nbrsInHash,nbrs,edgeHash):
   subnodes_size = nodes_size / process_num
   start = 0
   print 'Start to create process  time: ' + str(time.time() - starttime)
-  for num in range(0,process_num):
+  for connpair in connections: 
     subnodes = nodes[start:start+subnodes_size]
     p = Process(target = processingWithNeighborsOverLapRate,
-        args = (subnodes,start,starttime,visitedHash,resultdict,args))
+        args = (subnodes,start,starttime,connpair[1],args))
     process.append(p)
+    p.start()
     start += subnodes_size
   print 'Start to run process  time: ' + str(time.time() - starttime)
-  for p in process:
-    p.start()
-
+  result = {}
   ps = len(process)
+  for connpair in connections:
+    parent_conn = connpair[0]
+    rev= parent_conn.recv()
+    result.update(rev)
+  #print rev
   for t in process:
+    print 'Join'
     t.join()
 
   print 'Deliver Done time: ' + str(time.time() - starttime)
   print str(ps) + ' process worked'
-  return resultdict.items()
+  return result.items()
 
 
