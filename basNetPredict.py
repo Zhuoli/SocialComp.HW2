@@ -42,7 +42,22 @@ def parsefile(argv):
   #for i in range(num_edges):
   #    n1, n2 = random.sample(nodes, 2)
   #    print '%s\t%s' % (n1, n2)
-  return  nodes,edgeHash,outHash,inHash
+  
+  nbrs = {}
+  # initial node's degree hash table
+  for node in nodes:
+      outNeighbors = outHash.get(node)
+      if outNeighbors == None:
+          outNeighbors = []
+      outHash[node] = list(set(outNeighbors))
+      inNeighbors = inHash.get(node)
+      if inNeighbors == None:
+          inNeighbors = []
+      inHash[node] = list(set(inNeighbors))
+      outset = set(outHash[node])
+      inset = set(inHash[node])
+      nbrs[node] = list(outset | inset)
+  return  nodes,edgeHash,outHash,inHash,nbrs
 
 # test usage
 def readfile():
@@ -107,8 +122,8 @@ def debugPrints(pairs):
 
 # Author: Zhuoli
 # make Prediction  using Jaccard's coefficient method
-def predictorAtCoefficient(nodes,edgeHash,nbrsInHash,nbrsOutHash):
-  items = predictWithNeighborsOverLapRate(nodes,edgeHash,nbrsOutHash,nbrsInHash)
+def predictorAtCoefficient(nodes,edgeHash,nbrsInHash,nbrsOutHash,nbrsHash):
+  items = predictWithNeighborsOverLapRate(nodes,edgeHash,nbrsOutHash,nbrsInHash,nbrsHash)
   return items
 # Author: Zhuoli
 # fullfill the neighbor hash sable
@@ -147,25 +162,11 @@ def getEdgeHash(community):
 # Author: Zhuoli
 # make prediction with neighbors overlap
 # rate method in a undirected community
-def predictWithNeighborsOverLapRate(nodes,edgeHash,nbrsOutHash,nbrsInHash):
+def predictWithNeighborsOverLapRate(nodes,edgeHash,nbrsOutHash,nbrsInHash,nbrs):
 #  print 'in predict with neighbor over lap rate'
   visitedHash ={}
   result = {}
-  nbrs = {}
   k = 1
-  # initial node's degree hash table
-  for node in nodes:
-    outNeighbors = nbrsOutHash.get(node)
-    if outNeighbors == None:
-        outNeighbors = []
-    nbrsOutHash[node] = list(set(outNeighbors))
-    inNeighbors = nbrsInHash.get(node)
-    if inNeighbors == None:
-        inNeighbors = []
-    nbrsInHash[node] = list(set(inNeighbors))
-    outset = set(nbrsOutHash[node])
-    inset = set(nbrsInHash[node])
-    nbrs[node] = list(outset | inset)
   for node in nodes:
     #print 'loop: ' + str(k) +'\t' + '%.3f%% completed' % ((k*100 + 0.0)/ 97134) 
     k = k+1
@@ -199,41 +200,28 @@ def getPred4ThisNode(node,visitedHash,result,edgeHash,nbrsOutHash,nbrsInHash,nbr
   return
 # Author: Zhuoli
 # make prediction using common neighbors method
-def predictorAtCommonNeighbors(communities):
-  bufferHash = {}
-  for community in communities:
-    neighborHash = getNeighborHash(community)
-    predictAtCommonNeighbors(community,bufferHash,neighborHash)
-  items = bufferHash.items()
-  return items
-
-# make prediction using common neighbors method in one community
-def predictAtCommonNeighbors(community,bufferHash,neighborHash):
-  visited ={} 
-  edgeHash = getEdgeHash(community)
-  for node in community.nodes():
+def predictorAtCommonNeighbors(nodes,edgeHash,nbrsInHash,nbrsOutHash,nbrsHash):
+  visited ={}
+  result = {}
+  for node in nodes:
     visited[node] = True
-    nodeNeighbors = neighborHash[node]
+    nodeNeighbors = nbrsHash[node]
     for nodeNeighbor in nodeNeighbors:
-      subneighbors = neighborHash[nodeNeighbor]
-      subneighbors.remove(node)
+      subneighbors = nbrsHash[nodeNeighbor]
       for subneighbor in subneighbors:
         # omit connected links
+        if subneighbor == node:
+          continue
         if visited.has_key(subneighbor):
           continue
         if edgeHash.has_key(tuple([subneighbor,node])):
           continue
         if edgeHash.has_key(tuple([node,subneighbor])):
           continue
-        commons = (len(set(neighborHash[subneighbor]) & set(nodeNeighbors)) + 0.0)
+        commons = (len(set(nbrsHash[subneighbor]) & set(nodeNeighbors)) + 0.0)
         edge = tuple([subneighbor,node])
-        if edge in bufferHash:
-          value = bufferHash[edge]
-          if commons > value:
-            bufferHash[edge]= commons
-        else:
-          bufferHash[edge] = commons
-  return
+        result[edge] = commons
+  return result.items()
 
 # Author: Zhuoli
 # get best machies
