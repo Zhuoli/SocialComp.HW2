@@ -16,11 +16,13 @@ number = int(sys.argv[2])
 #buffers = net.predictorAtCoefficient(nodes,edgeHash,inHash,outHash,nbrsHash)
 #print 'prediction done time: ' + str(time.time() - start)
 # get the prediction buffer using common neibhbors method
-buffers = net.predictorAtCommonNeighbors(nodes,edgeHash,inHash,outHash,nbrsHash)
+#buffers = net.predictorAtCommonNeighbors(nodes,edgeHash,inHash,outHash,nbrsHash)
+buffers,keys = net.predictorAtPref(nodes,edgeHash,inHash,outHash,nbrsHash)
 #print 'prediction size at common neighbors method is:\n ' + str(len(buffersOfCN))
 
 # get best n maches
-bestmatches,number = net.getBestMaches(buffers, number)
+bestmatches,number = net.getBestMatches4Pref(buffers,keys,edgeHash,number)
+#bestmatches,number = net.getBestMaches(buffers, number)
 #print 'bestmatch done time: ' + str(time.time() - start)
 # print prediction
 net.prints(bestmatches)

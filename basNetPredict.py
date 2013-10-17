@@ -222,6 +222,39 @@ def predictorAtCommonNeighbors(nodes,edgeHash,nbrsInHash,nbrsOutHash,nbrsHash):
         edge = tuple([subneighbor,node])
         result[edge] = commons
   return result.items()
+#predictor using Preferential attachment
+def predictorAtPref(nodes,edgeHash,inHash,outHash,nbrsHash):
+  prioHash = {}
+  # build priority hash table, the nodes who share the same degree are in one key
+  for node in nodes:
+    neighbors = nbrsHash[node]
+    degree = len(neighbors)
+    if prioHash.has_key(degree):
+      queue = prioHash[degree]
+      queue.append(node)
+    else:
+      prioHash[degree] = [node]
+  # 
+  keys = prioHash.keys()
+  keys.sort()
+  return prioHash,keys
+
+def getBestMatches4Pref(prioHash,keys,edgeHash,num):
+  buffers = []
+  for i in range(len(keys) - 1, -1,-1):
+    nodes = prioHash[keys[i]]
+    for a in nodes:
+      for b in nodes:
+        if tuple([a,b]) in edgeHash or tuple([b,a]) in edgeHash:
+          continue
+        if a == b:
+          continue
+        buffers.append([[a,b],keys[i]])
+        num = num-1
+        if num < 1:
+          return buffers,0
+  return buffers,num
+
 
 # Author: Zhuoli
 # get best machies
