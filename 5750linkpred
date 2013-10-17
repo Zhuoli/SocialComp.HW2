@@ -6,10 +6,10 @@ import networkx as nx
 import time
 start = time.time()
 # get edgelist
-# number
-number = int(sys.argv[2])
 # get directed graph
 nodes,edgeHash,outHash,inHash = net.parsefile(sys.argv)
+# number
+number = int(sys.argv[2])
 #print 'edgelist2graph done time: ' + str(time.time() - start)
 #print 'nodes size: ' + str(len(nodes))
 #print 'edges size: ' + str(len(edgelist))
