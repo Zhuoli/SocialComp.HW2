@@ -4,26 +4,25 @@ sys.path.append('./networkx')
 import basNetPredict as net
 import networkx as nx
 import time
-starttime = time.time()
+start = time.time()
 # get edgelist
-edgelist,nodes = net.file2edgelist(sys.argv) 
 # number
 number = int(sys.argv[2])
 # get directed graph
-dig = net.edgelist2graph(edgelist)
+nodes,edgeHash,outHash,inHash = net.parsefile(sys.argv)
+print 'edgelist2graph done time: ' + str(time.time() - start)
 #print 'nodes size: ' + str(len(nodes))
 #print 'edges size: ' + str(len(edgelist))
 # get the prediction buffer using Jaccard's coefficient method
-print 'At time ' + str(time.time() - starttime) + 'enterint predictor'
-buffersOfCE = net.predictorAtCoefficient(dig,starttime)
+buffersOfCE = net.predictorAtCoefficient(nodes,edgeHash,inHash,outHash)
+print 'prediction done time: ' + str(time.time() - start)
 # get the prediction buffer using common neibhbors method
 #buffersOfCN = net.predictorAtCommonNeighbors(communities)
 #print 'prediction size at common neighbors method is:\n ' + str(len(buffersOfCN))
 
 # get best n maches
 bestmatches,number = net.getBestMaches(buffersOfCE, number)
+print 'bestmatch done time: ' + str(time.time() - start)
 # print prediction
-net.prints(bestmatches)
-#net.debugPrints(bestmatches)
-endtime = time.time()
-print 'time used:\t' + str(endtime - starttime)
+#net.prints(bestmatches)
+net.debugPrints(bestmatches)
