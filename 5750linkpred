@@ -2,7 +2,6 @@
 import sys
 sys.path.append('./networkx')
 import basNetPredict as net
-import networkx as nx
 import time
 start = time.time()
 # get edgelist

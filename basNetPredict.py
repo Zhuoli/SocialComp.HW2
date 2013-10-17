@@ -1,5 +1,4 @@
 import sys, random
-import networkx as nx
 from collections import namedtuple
 from numpy import array
 #import matplotlib.pyplot as plt
@@ -154,6 +153,7 @@ def predictWithNeighborsOverLapRate(nodes,edgeHash,nbrsOutHash,nbrsInHash):
   result = {}
   nbrs = {}
   k = 1
+  # initial node's degree hash table
   for node in nodes:
     outNeighbors = nbrsOutHash.get(node)
     if outNeighbors == None:
