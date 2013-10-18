@@ -1,6 +1,7 @@
 import sys, random
 from collections import namedtuple
 from numpy import array
+import math
 #import matplotlib.pyplot as plt
 def parsefile(argv):
   if len(argv) < 3:
@@ -49,14 +50,17 @@ def parsefile(argv):
       outNeighbors = outHash.get(node)
       if outNeighbors == None:
           outNeighbors = []
-      outHash[node] = list(set(outNeighbors))
+          outHash[node] = outNeighbors
       inNeighbors = inHash.get(node)
       if inNeighbors == None:
           inNeighbors = []
-      inHash[node] = list(set(inNeighbors))
-      outset = set(outHash[node])
-      inset = set(inHash[node])
-      nbrs[node] = list(outset | inset)
+          inHash[node] = inNeighbors
+      outset = outHash[node]
+      inset = inHash[node]
+      tmp = []
+      tmp.extend(outset)
+      tmp.extend(inset)
+      nbrs[node] = tmp
   return  nodes,edgeHash,outHash,inHash,nbrs
 
 # test usage
@@ -170,13 +174,13 @@ def predictWithNeighborsOverLapRate(nodes,edgeHash,nbrsOutHash,nbrsInHash,nbrs):
   for node in nodes:
     #print 'loop: ' + str(k) +'\t' + '%.3f%% completed' % ((k*100 + 0.0)/ 97134) 
     k = k+1
-    getPred4ThisNode(node,visitedHash,result,edgeHash,nbrsOutHash,nbrsInHash,nbrs)
+    getPred4ThisNodeAA(node,visitedHash,result,edgeHash,nbrsOutHash,nbrsInHash,nbrs)
   return result.items()
 
 # get prediction for this node
 def getPred4ThisNode(node,visitedHash,result,edgeHash,nbrsOutHash,nbrsInHash,nbrs):
   visitedHash[node] = True
-  nodeNeighbors = list(set(nbrs[node]))
+  nodeNeighbors = nbrs[node]
 #   print 'first loop level node neighbors size: ' + str(len(nodeNeighbors))
   for nodeNeighbor in nodeNeighbors:
     subneighbors = nbrs[nodeNeighbor]
@@ -195,6 +199,37 @@ def getPred4ThisNode(node,visitedHash,result,edgeHash,nbrsOutHash,nbrsInHash,nbr
       numerator = (len(set(nbrs[subneighbor]) & set(nodeNeighbors)) + 0.0)
       denominator = (len(set(nbrs[subneighbor]) | set(nodeNeighbors)) + 0.1)
       rate = numerator / denominator
+      edge = tuple([subneighbor,node])
+      if edge in result:
+        result[edge] = result[edge] + rate
+      else:
+        result[edge] = rate
+  return
+# Author: Zhuoli
+# Adamic/Adar Aproach
+def getPred4ThisNodeAA(node,visitedHash,result,edgeHash,nbrsOutHash,nbrsInHash,nbrs):
+  visitedHash[node] = True
+  nodeNeighbors = nbrs[node]
+#   print 'first loop level node neighbors size: ' + str(len(nodeNeighbors))
+  for nodeNeighbor in nodeNeighbors:
+    subneighbors = nbrs[nodeNeighbor]
+#   print 'second loop level subneighbors size: ' + str(len(subneighbors))
+    for subneighbor in subneighbors:
+#        print 'third loop level node size: ' + str(len(subneighbors))
+        # omit connected links
+      if subneighbor == node:
+        continue
+      if subneighbor in visitedHash:
+        continue
+      if tuple([subneighbor,node]) in edgeHash:
+        continue
+      if tuple([node,subneighbor]) in edgeHash:
+        continue
+      union = set(nbrs[subneighbor]) & set(nodeNeighbors) 
+      numerator = len(union) + 0.0
+      rate = 0.0
+      for n in union:
+        rate += numerator / (math.log(2 + len(nbrs[n])))
       edge = tuple([subneighbor,node])
       result[edge] = rate
   return
